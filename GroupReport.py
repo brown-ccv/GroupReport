@@ -85,7 +85,6 @@ def get_user_email(username):
 
     return output
 
-#psh
 def get_premium(username,groupnames):
     account=[]
 # Get list of all groups to which user belongs
@@ -102,58 +101,6 @@ def get_premium(username,groupnames):
         account.append('0')
 
     return account
-#
-
-def get_account_types(username):
-    """
-    Returns a list of current account types associated with the specified user.
-    """
-    output=[]
-    # Define premium account types (based on Linux groups)
-    # Priority accounts
-    priority=['priority','priority1','priority2','priority3','priority4',
-             'priority5','priority6','priority7','priority8','priority9']
-    priorityp=['priority+','priority+1']
-    # Premium GPU accounts
-    prigpu=['pri-gpu','pri-gpu1']
-    prigpup=['pri-gpu+','pri-gpu+1']
-    gpuhe=['gpu-he','gpu-he1']
-    # Bigmem accounts
-    pribigmem=['pri-bigmem','pri-bigmem1']
- 
-    # Get list of all groups to which user belongs
-    proc=subprocess.Popen(['id','-Gn',username],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT,
-                           encoding='utf-8')
-    out,err=proc.communicate()
-    groups=list(out.strip('\n').split(" ")) 
-    
-    # Determine if user belongs to any groups associated with premium accounts 
-    for group in priority:
-      if group in groups:
-        output.append('priority')
-    for group in priorityp:
-      if group in groups:
-        output.append('priority+')
-    for group in prigpu:
-      if group in groups:
-        output.append('pri-gpu')
-    for group in prigpup:
-      if group in groups:
-        output.append('pri-gpu+')
-    for group in gpuhe:
-      if group in groups:
-        output.append('gpu-he')
-    for group in pribigmem:
-      if group in groups:
-        output.append('pri-bigmem')
-
-    # Add indicator to handle users with no premium account(s)
-    if not output:
-      output.append('-')
-
-    return output
 
 def get_usage(username,partition,start,end):
     """
@@ -610,14 +557,12 @@ args=parser.parse_args()
 
 # declarations
 account={}
-#psh
 account_priority={}
 account_priorityp={}
 account_prigpu={}
 account_prigpup={}
 account_gpuhe={}
 account_pribigmem={}
-#
 affiliation=[]
 batch={}
 bigmem={}
@@ -651,54 +596,42 @@ total_used,allocation,storage=get_storage(storagepath)
 for user in affiliation:
     name[user]=get_user_name(user)
     emailaddr[user]=get_user_email(user)
-    account[user]=get_account_types(user)
-#psh
     account_priority[user]=get_premium(user,priority)
     account_priorityp[user]=get_premium(user,priorityp)
     account_prigpu[user]=get_premium(user,prigpu)
     account_prigpup[user]=get_premium(user,prigpup)
     account_gpuhe[user]=get_premium(user,gpuhe)
     account_pribigmem[user]=get_premium(user,pribigmem)
-#
     batch[user]=get_usage(user,'batch',args.start,args.end)
     bigmem[user]=get_usage(user,'bigmem',args.start,args.end)
     gpu[user]=get_usage(user,'gpu',args.start,args.end)
 
 # convert dicts to pandas dataframes
 affiliation_df=pd.DataFrame.from_dict(affiliation,orient='index',columns=['Affiliation'])
-account_df=pd.DataFrame.from_dict(account,orient='index',columns=['Account'])
 name_df=pd.DataFrame.from_dict(name,orient='index',columns=['Name'])
 email_df=pd.DataFrame.from_dict(emailaddr,orient='index',columns=['Email'])
 batch_df=pd.DataFrame.from_dict(batch,orient='index',columns=['BatchJobs','BatchUsage'])
 bigmem_df=pd.DataFrame.from_dict(bigmem,orient='index',columns=['BigmemJobs','BigmemUsage'])
 gpu_df=pd.DataFrame.from_dict(gpu,orient='index',columns=['GPUJobs','GPUUsage'])
-#psh
 account_priority_df=pd.DataFrame.from_dict(account_priority,orient='index',columns=['priority'])
 account_priorityp_df=pd.DataFrame.from_dict(account_priorityp,orient='index',columns=['priority+'])
 account_prigpu_df=pd.DataFrame.from_dict(account_prigpu,orient='index',columns=['pri-gpu'])
 account_prigpup_df=pd.DataFrame.from_dict(account_prigpup,orient='index',columns=['pri-gpu+'])
 account_gpuhe_df=pd.DataFrame.from_dict(account_gpuhe,orient='index',columns=['gpu-he'])
 account_pribigmem_df=pd.DataFrame.from_dict(account_pribigmem,orient='index',columns=['pri-bigmem'])
-#
 
 # combine dataframes into a single dataframe
-data=pd.concat([name_df,email_df,affiliation_df,account_df,
-               batch_df,bigmem_df,gpu_df,storage],
-               axis=1,ignore_index=False).reset_index(drop=False) 
-data.rename(columns={'index':'Username'},inplace=True)
-#psh
-data1=pd.concat([name_df,email_df,affiliation_df,
+data=pd.concat([name_df,email_df,affiliation_df,
                 account_priority_df,account_priorityp_df,account_prigpu_df,
                 account_prigpup_df,account_gpuhe_df,account_pribigmem_df,
                 batch_df,bigmem_df,gpu_df,storage],
                 axis=1,ignore_index=False).reset_index(drop=False)
-data1.rename(columns={'index':'Username'},inplace=True)
-#
+data.rename(columns={'index':'Username'},inplace=True)
+
 # clean up NaNs and formatting of dataframe
 data['Name']=data['Name'].fillna('NA')
 data['Email']=data['Email'].fillna('NA')
 data['Affiliation']=data['Affiliation'].fillna('NA')
-data['Account']=data['Account'].fillna('-')
 data=data.fillna(0)
 
 data['BatchJobs']=data['BatchJobs'].astype(int)
@@ -712,4 +645,3 @@ data['StorageGB']=data['StorageGB'].astype(int)
 # generate output
 #make_pdf(data,allocation,args,outpath)
 data.to_csv('data.csv')
-data1.to_csv('data1.csv')
