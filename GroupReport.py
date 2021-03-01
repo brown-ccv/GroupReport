@@ -85,6 +85,25 @@ def get_user_email(username):
 
     return output
 
+#psh
+def get_premium(username,groupnames):
+    account=[]
+# Get list of all groups to which user belongs
+    proc=subprocess.Popen(['id','-Gn',username],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT,
+                           encoding='utf-8')
+    out,err=proc.communicate()
+    groups=list(out.strip('\n').split(" "))
+    for group in groupnames:
+        if group in groups:
+            account.append('1')
+    if not account:
+        account.append('0')
+
+    return account
+#
+
 def get_account_types(username):
     """
     Returns a list of current account types associated with the specified user.
@@ -591,6 +610,14 @@ args=parser.parse_args()
 
 # declarations
 account={}
+#psh
+account_priority={}
+account_priorityp={}
+account_prigpu={}
+account_prigpup={}
+account_gpuhe={}
+account_pribigmem={}
+#
 affiliation=[]
 batch={}
 bigmem={}
@@ -600,7 +627,20 @@ name={}
 
 # constants
 storagepath='/gpfs/data/ccvstaff/quota-reports/'+args.groupname+'-quota-report.txt'
-outpath='/gpfs/data/ccvstaff/phall1/projects/baldrick/reports/reports2.venv/output/'
+outpath='/gpfs/data/ccvstaff/phall1/projects/oscar/reports/group.venv/GroupReport/output/'
+#psh
+# oscar group names for premium account types
+# priority accounts
+priority=['priority','priority1','priority2','priority3','priority4',
+          'priority5','priority6','priority7','priority8','priority9']
+priorityp=['priority+','priority+1']
+# premium GPU accounts
+prigpu=['pri-gpu','pri-gpu1']
+prigpup=['pri-gpu+','pri-gpu+1']
+gpuhe=['gpu-he','gpu-he1']
+# Bigmem accounts
+pribigmem=['pri-bigmem','pri-bigmem1']
+#
 
 # get list of group members
 affiliation=get_members(args.groupname)
@@ -611,7 +651,15 @@ total_used,allocation,storage=get_storage(storagepath)
 for user in affiliation:
     name[user]=get_user_name(user)
     emailaddr[user]=get_user_email(user)
-    account[user]=get_account_types(user) 
+    account[user]=get_account_types(user)
+#psh
+    account_priority[user]=get_premium(user,priority)
+    account_priorityp[user]=get_premium(user,priorityp)
+    account_prigpu[user]=get_premium(user,prigpu)
+    account_prigpup[user]=get_premium(user,prigpup)
+    account_gpuhe[user]=get_premium(user,gpuhe)
+    account_pribigmem[user]=get_premium(user,pribigmem)
+#
     batch[user]=get_usage(user,'batch',args.start,args.end)
     bigmem[user]=get_usage(user,'bigmem',args.start,args.end)
     gpu[user]=get_usage(user,'gpu',args.start,args.end)
@@ -624,13 +672,28 @@ email_df=pd.DataFrame.from_dict(emailaddr,orient='index',columns=['Email'])
 batch_df=pd.DataFrame.from_dict(batch,orient='index',columns=['BatchJobs','BatchUsage'])
 bigmem_df=pd.DataFrame.from_dict(bigmem,orient='index',columns=['BigmemJobs','BigmemUsage'])
 gpu_df=pd.DataFrame.from_dict(gpu,orient='index',columns=['GPUJobs','GPUUsage'])
+#psh
+account_priority_df=pd.DataFrame.from_dict(account_priority,orient='index',columns=['priority'])
+account_priorityp_df=pd.DataFrame.from_dict(account_priorityp,orient='index',columns=['priority+'])
+account_prigpu_df=pd.DataFrame.from_dict(account_prigpu,orient='index',columns=['pri-gpu'])
+account_prigpup_df=pd.DataFrame.from_dict(account_prigpup,orient='index',columns=['pri-gpu+'])
+account_gpuhe_df=pd.DataFrame.from_dict(account_gpuhe,orient='index',columns=['gpu-he'])
+account_pribigmem_df=pd.DataFrame.from_dict(account_pribigmem,orient='index',columns=['pri-bigmem'])
+#
 
 # combine dataframes into a single dataframe
 data=pd.concat([name_df,email_df,affiliation_df,account_df,
                batch_df,bigmem_df,gpu_df,storage],
                axis=1,ignore_index=False).reset_index(drop=False) 
 data.rename(columns={'index':'Username'},inplace=True)
-
+#psh
+data1=pd.concat([name_df,email_df,affiliation_df,
+                account_priority_df,account_priorityp_df,account_prigpu_df,
+                account_prigpup_df,account_gpuhe_df,account_pribigmem_df,
+                batch_df,bigmem_df,gpu_df,storage],
+                axis=1,ignore_index=False).reset_index(drop=False)
+data1.rename(columns={'index':'Username'},inplace=True)
+#
 # clean up NaNs and formatting of dataframe
 data['Name']=data['Name'].fillna('NA')
 data['Email']=data['Email'].fillna('NA')
@@ -646,7 +709,7 @@ data['GPUJobs']=data['GPUJobs'].astype(int)
 data['GPUUsage']=data['GPUUsage'].astype(int)
 data['StorageGB']=data['StorageGB'].astype(int)
 
-#print(data)
-#print(data.columns)
 # generate output
-make_pdf(data,allocation,args,outpath)
+#make_pdf(data,allocation,args,outpath)
+data.to_csv('data.csv')
+data1.to_csv('data1.csv')
