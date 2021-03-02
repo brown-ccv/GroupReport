@@ -625,8 +625,10 @@ data=pd.concat([name_df,email_df,affiliation_df,
                 account_priority_df,account_priorityp_df,account_prigpu_df,
                 account_prigpup_df,account_gpuhe_df,account_pribigmem_df,
                 batch_df,bigmem_df,gpu_df,storage],
-                axis=1,ignore_index=False).reset_index(drop=False)
-data.rename(columns={'index':'Username'},inplace=True)
+                axis=1,ignore_index=False)
+#                axis=1,ignore_index=False).reset_index(drop=False)
+#data.rename(columns={'index':'Username'},inplace=True)
+data.index.name='Username'
 
 # clean up NaNs and formatting of dataframe
 data['Name']=data['Name'].fillna('NA')
