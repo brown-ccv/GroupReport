@@ -561,7 +561,9 @@ account_priority={}
 account_priorityp={}
 account_prigpu={}
 account_prigpup={}
+account_prigpupp={}
 account_gpuhe={}
+account_gpuhep={}
 account_pribigmem={}
 affiliation=[]
 batch={}
@@ -573,8 +575,10 @@ name={}
 # constants
 storagepath='/gpfs/data/ccvstaff/quota-reports/'+args.groupname+'-quota-report.txt'
 outpath='/gpfs/data/ccvstaff/phall1/projects/oscar/reports/group.venv/GroupReport/output/'
-#psh
+
 # oscar group names for premium account types
+# need to be updated manually when new account types/groups created
+# by systems team
 # priority accounts
 priority=['priority','priority1','priority2','priority3','priority4',
           'priority5','priority6','priority7','priority8','priority9']
@@ -582,7 +586,9 @@ priorityp=['priority+','priority+1']
 # premium GPU accounts
 prigpu=['pri-gpu','pri-gpu1']
 prigpup=['pri-gpu+','pri-gpu+1']
+prigpupp=['pri-gpu++','pri-gpu++1']
 gpuhe=['gpu-he','gpu-he1']
+gpuhep=['gpu-he+','gpu-he+1']
 # Bigmem accounts
 pribigmem=['pri-bigmem','pri-bigmem1']
 #
@@ -600,7 +606,9 @@ for user in affiliation:
     account_priorityp[user]=get_premium(user,priorityp)
     account_prigpu[user]=get_premium(user,prigpu)
     account_prigpup[user]=get_premium(user,prigpup)
+    account_prigpupp[user]=get_premium(user,prigpupp)
     account_gpuhe[user]=get_premium(user,gpuhe)
+    account_gpuhep[user]=get_premium(user,gpuhep)
     account_pribigmem[user]=get_premium(user,pribigmem)
     batch[user]=get_usage(user,'batch',args.start,args.end)
     bigmem[user]=get_usage(user,'bigmem',args.start,args.end)
@@ -617,17 +625,18 @@ account_priority_df=pd.DataFrame.from_dict(account_priority,orient='index',colum
 account_priorityp_df=pd.DataFrame.from_dict(account_priorityp,orient='index',columns=['priority+'])
 account_prigpu_df=pd.DataFrame.from_dict(account_prigpu,orient='index',columns=['pri-gpu'])
 account_prigpup_df=pd.DataFrame.from_dict(account_prigpup,orient='index',columns=['pri-gpu+'])
+account_prigpupp_df=pd.DataFrame.from_dict(account_prigpupp,orient='index',columns=['pri-gpu++'])
 account_gpuhe_df=pd.DataFrame.from_dict(account_gpuhe,orient='index',columns=['gpu-he'])
+account_gpuhep_df=pd.DataFrame.from_dict(account_gpuhep,orient='index',columns=['gpu-he+'])
 account_pribigmem_df=pd.DataFrame.from_dict(account_pribigmem,orient='index',columns=['pri-bigmem'])
 
 # combine dataframes into a single dataframe
 data=pd.concat([name_df,email_df,affiliation_df,
                 account_priority_df,account_priorityp_df,account_prigpu_df,
-                account_prigpup_df,account_gpuhe_df,account_pribigmem_df,
+                account_prigpup_df,account_prigpup_df,
+                account_gpuhe_df,account_gpuhep_df,account_pribigmem_df,
                 batch_df,bigmem_df,gpu_df,storage],
                 axis=1,ignore_index=False)
-#                axis=1,ignore_index=False).reset_index(drop=False)
-#data.rename(columns={'index':'Username'},inplace=True)
 data.index.name='Username'
 
 # clean up NaNs and formatting of dataframe
