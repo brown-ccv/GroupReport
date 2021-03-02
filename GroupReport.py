@@ -417,13 +417,23 @@ def format_summary(data,allocation):
      avail=allocation-used
      # Accounts 
      # consider only primary accounts
+#psh
      datap=data[data.Affiliation=='primary']
-     n_priority=len(datap[datap.Account=='priority'])
-     n_priorityp=len(datap[datap.Account=='priority+'])
-     n_prigpu=len(datap[datap.Account=='pri-gpu'])
-     n_prigpup=len(datap[datap.Account=='pri-gpu+'])
-     n_gpuhe=len(datap[datap.Account=='gpu-he'])
-     n_pribigmem=len(datap[datap.Account=='pri-bigmem'])
+     n_priority=data['priority'].sum()
+     n_priorityp=data['priority+'].sum()
+     n_prioritygpu=data['pri-gpu'].sum()
+     n_prioritygpup=data['pri-gpu+'].sum()
+     n_prioritygpupp=data['pri-gpu++'].sum()
+     n_gpuhe=data['gpu-he'].sum()
+     n_gpuhep=data['gpu-he+'].sum()
+     n_pribigmem=data['pri-bigmem'].sum()
+#     n_priority=len(datap[datap.Account=='priority'])
+#     n_priorityp=len(datap[datap.Account=='priority+'])
+#     n_prigpu=len(datap[datap.Account=='pri-gpu'])
+#     n_prigpup=len(datap[datap.Account=='pri-gpu+'])
+#     n_gpuhe=len(datap[datap.Account=='gpu-he'])
+#     n_pribigmem=len(datap[datap.Account=='pri-bigmem'])
+#psh
      # Prepare formatted output for tables
      out_members=[['Primary',n_primary],
                   ['Secondary',n_secondary],
@@ -433,9 +443,11 @@ def format_summary(data,allocation):
                   ['Available',avail]]
      out_accounts=[['Priority',n_priority],
                    ['Priority+',n_priorityp],
-                   ['Standard GPU Priority',n_prigpu],
-                   ['Standard GPU Priority+',n_prigpup],
-                   ['High-End GPU Priority',n_gpuhe],
+                   ['GPU Priority',n_prigpu],
+                   ['GPU Priority+',n_prigpup],
+                   ['GPU Priority++',n_prigpupp],
+                   ['High-End GPU',n_gpuhe],
+                   ['High-End GPU+',n_gpuhep],
                    ['Large Memory Priority',n_pribigmem]]
 
      return out_members,out_storage,out_accounts
@@ -654,5 +666,5 @@ data['GPUUsage']=data['GPUUsage'].astype(int)
 data['StorageGB']=data['StorageGB'].astype(int)
 
 # generate output
-#make_pdf(data,allocation,args,outpath)
 data.to_csv('data.csv')
+#make_pdf(data,allocation,args,outpath)
